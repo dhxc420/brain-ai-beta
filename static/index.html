@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+
+  <title>Brain AI — Red Neuronal Local</title>
+
+  <link rel="stylesheet" href="/static/app.css?v=39" />
+
+</head>
+
+<body>
+
+  <div class="app">
+
+    <header class="topbar">
+
+      <div class="brand">
+
+        <div class="brand-icon" aria-hidden="true">🧠</div>
+
+        <div>
+
+          <h1>Brain AI</h1>
+
+          <p>Red sináptica 3D · Vault Obsidian · Ollama local</p>
+
+        </div>
+
+      </div>
+
+      <div class="topbar-actions">
+        <div class="status-pill">
+
+          <span id="statusDot" class="dot"></span>
+
+          <span id="statusText">Conectando...</span>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+
+    <main class="main">
+
+      <section id="brainStage" class="brain-stage" aria-label="Visualización de red neuronal">
+
+        <div id="brain3dContainer"></div>
+
+        <div class="brain-hud">
+
+          <div id="neuronTooltip" class="neuron-tooltip hidden"></div>
+
+          <div class="brain-nav" aria-label="Navegación del cerebro">
+            <div class="brain-nav-zoom hud-interactive">
+              <button type="button" id="brainZoomIn" class="brain-nav-btn" title="Acercar (rueda ↑)">+</button>
+              <div class="brain-zoom-track" aria-hidden="true">
+                <div id="brainZoomThumb" class="brain-zoom-thumb"></div>
+              </div>
+              <button type="button" id="brainZoomOut" class="brain-nav-btn" title="Alejar (rueda ↓)">−</button>
+              <button type="button" id="brainZoomReset" class="brain-nav-btn brain-nav-reset" title="Vista inicial">⌂</button>
+            </div>
+            <div id="brainZoomLevel" class="brain-zoom-level">Red sináptica</div>
+          </div>
+
+          <div class="brain-region-nav hud-interactive" aria-label="Regiones del cerebro">
+            <div class="brain-region-nav-title">Regiones del cerebro</div>
+            <div id="brainClusterStrip" class="brain-cluster-strip"></div>
+          </div>
+
+          <div class="brain-overlay">
+            <div class="brain-legend">
+              <strong>Corteza digital</strong><br>
+              Clic + arrastrar = girar · Rueda = zoom · Estilo Tron/Matrix · Pasa el cursor para ver etiqueta
+            </div>
+            <div id="workflowStrip" class="workflow-strip"></div>
+          </div>
+
+        </div>
+
+        <div id="llmLoading" class="llm-loading hidden" aria-live="polite" aria-busy="false">
+          <div class="llm-loading-card">
+            <div class="llm-loading-title" id="llmLoadingLabel">Procesando con Ollama</div>
+            <div class="llm-loading-track">
+              <div class="llm-loading-bar"></div>
+            </div>
+            <p class="llm-loading-hint" id="llmLoadingHint">Cerebro 3D en pausa · GPU libre para el modelo</p>
+          </div>
+        </div>
+
+      </section>
+
+
+
+      <section class="console">
+
+        <div class="console-header">
+
+          <h2 id="wfTitle">Workflow</h2>
+
+          <p id="wfDesc">Selecciona un nodo del cerebro</p>
+
+        </div>
+
+
+
+        <div class="framework">
+
+          <div class="framework-item"><span>Role</span><strong id="fwRole">—</strong></div>
+
+          <div class="framework-item"><span>Tools</span><strong id="fwTools">—</strong></div>
+
+          <div class="framework-item"><span>Trigger</span><strong id="fwTrigger">—</strong></div>
+
+          <div class="framework-item"><span>Output</span><strong id="fwOutput">—</strong></div>
+
+        </div>
+
+
+
+        <div class="console-body">
+
+          <div class="safe-banner" id="safeBanner">
+
+            🛡️ Modo seguro: solo modelos ligeros.
+
+          </div>
+
+          <div class="brain-search-block" id="brainSearchBlock">
+            <div class="brain-search-row">
+              <span class="brain-search-icon" aria-hidden="true">🔍</span>
+              <input
+                id="memorySearchInput"
+                type="search"
+                class="brain-search-input"
+                placeholder="Buscar neurona, ID o vault — ej. vault_Process_chat-2026-06-25_2249"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Buscar memorias y neuronas"
+              />
+              <button id="memorySearchClear" type="button" class="secondary small brain-search-clear hidden" title="Limpiar búsqueda">✕</button>
+            </div>
+            <ul id="searchResults" class="memory-list search-results hidden" aria-live="polite"></ul>
+          </div>
+
+
+
+          <div class="console-panels">
+
+          <details class="side-panel">
+            <summary>Second Brain <span id="vaultNoteCount" class="memory-count">0</span></summary>
+            <div class="side-panel-body vault-panel">
+
+            <p id="vaultStatus" class="vault-status">Vault Markdown · compatible Obsidian</p>
+
+            <div class="memory-actions">
+
+              <button id="vaultOnboardBtn" class="secondary small">Entrevista BRAIN.md</button>
+
+              <button id="vaultMaintainBtn" class="secondary small">Mantener vault</button>
+
+              <button id="refreshVaultBtn" class="secondary small">↻ Notas</button>
+
+            </div>
+
+            <div id="onboardingBox" class="onboarding-box hidden">
+
+              <p id="onboardingQuestion" class="onboarding-q"></p>
+
+              <textarea id="onboardingAnswer" placeholder="Tu respuesta..."></textarea>
+
+              <button id="onboardingSubmitBtn" class="small">Siguiente</button>
+
+            </div>
+
+            <ul id="vaultNoteList" class="memory-list vault-note-list"></ul>
+
+            <div class="vault-project-row">
+
+              <input id="projectNameInput" type="text" placeholder="Nuevo proyecto..." />
+
+              <button id="createProjectBtn" class="secondary small">+ Proyecto</button>
+
+            </div>
+
+            </div>
+          </details>
+
+
+
+          <details class="side-panel" id="reposPanel">
+            <summary>Repositorios <span id="repoCount" class="memory-count">0</span></summary>
+            <div class="side-panel-body repos-panel">
+
+            <p class="vault-status">Chats Cursor → neuronas · Vuela RCOL · World Runner</p>
+
+            <div class="memory-actions">
+
+              <button id="syncReposBtn" class="secondary small">↻ Importar chats</button>
+
+              <button id="refreshReposBtn" class="secondary small">Actualizar</button>
+
+            </div>
+
+            <ul id="repoList" class="memory-list"></ul>
+            </div>
+          </details>
+
+
+
+          <details class="side-panel" open>
+            <summary>Memorias <span id="memoryCount" class="memory-count">0</span></summary>
+            <div class="side-panel-body memory-panel">
+
+            <div class="memory-actions">
+
+              <button id="refreshMemoriesBtn" class="secondary small">↻ Actualizar</button>
+
+              <button id="consolidateBtn" class="secondary small">Fusionar duplicados</button>
+
+              <button id="forgetStaleBtn" class="secondary small">Olvidar antiguas</button>
+
+            </div>
+
+            <ul id="memoryList" class="memory-list"></ul>
+
+            <div class="memory-add">
+
+              <textarea id="memoryInput" placeholder="Nueva memoria (ej. recuerda que...)"></textarea>
+
+              <div class="memory-add-row">
+
+                <select id="memoryTypeSelect" aria-label="Tipo de memoria">
+
+                  <option value="fact">Hecho</option>
+
+                  <option value="conversation">Conversación</option>
+
+                  <option value="source">Fuente</option>
+
+                  <option value="workflow_run">Workflow</option>
+
+                </select>
+
+                <button id="addMemoryBtn">Guardar</button>
+
+              </div>
+
+            </div>
+            </div>
+          </details>
+
+          </div>
+
+          <div class="console-footer">
+          <div class="controls">
+            <select id="modelSelect" aria-label="Modelo Ollama"></select>
+            <button id="runBtn">⚡ Ejecutar</button>
+            <button id="refreshBtn" class="secondary">↻</button>
+          </div>
+
+          <div class="chat-output-row">
+            <button id="clearChatBtn" type="button" class="secondary chat-clear-btn" title="Limpiar historial de sesión">Limpiar chat</button>
+          </div>
+
+          <div id="output" class="output-box">Pulsa un nodo del cerebro o escribe en el chat.</div>
+
+          <div id="sources" class="sources"></div>
+
+          <div class="chat-row">
+
+            <textarea id="chatInput" placeholder="Chat directo — prueba 'recuerda que me llamo Danny'..."></textarea>
+
+            <button id="chatBtn" type="button" aria-label="Enviar chat">→</button>
+
+          </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+
+    <div id="neuronModal" class="neuron-modal hidden" aria-hidden="true" role="dialog" aria-labelledby="neuronPanelTitle">
+
+      <div class="neuron-modal-backdrop" id="neuronModalBackdrop"></div>
+
+      <aside id="neuronPanel" class="neuron-panel" aria-label="Detalle de neurona">
+
+        <div class="neuron-panel-header">
+
+          <h3 id="neuronPanelTitle">Neurona</h3>
+
+          <button id="neuronPanelPin" class="secondary icon-btn hidden" type="button" title="Ubicar neurona en cerebro 3D" aria-label="Ubicar en cerebro">📍</button>
+
+          <button id="neuronPanelDelete" class="secondary icon-btn hidden" type="button" title="Eliminar" aria-label="Eliminar">🗑</button>
+
+          <button id="neuronPanelClose" class="secondary icon-btn" aria-label="Cerrar">✕</button>
+
+        </div>
+
+        <p id="neuronPanelType" class="neuron-type-badge"></p>
+
+        <div id="neuronPanelContent" class="neuron-panel-body"></div>
+
+      </aside>
+
+    </div>
+
+
+
+    <footer class="footer">
+
+      100% local · ChromaDB + Ollama · Datos en tu máquina
+
+    </footer>
+
+  </div>
+
+
+
+  <script type="importmap">
+
+  {
+
+    "imports": {
+
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+
+    }
+
+  }
+
+  </script>
+
+  <script type="module" src="/static/app.js?v=41"></script>
+
+</body>
+
+</html>
+
